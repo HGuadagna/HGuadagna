@@ -1,61 +1,85 @@
-import React, { useState } from 'react';
-import { render } from 'react-dom';
+import React, { useState, useEffect } from 'react'
+import ReactDOM from 'react-dom/client'
 
-const LimherApp = () => {
+const App = () => {
+  const [view, setView] = useState('welcome');
   const [m2, setM2] = useState(50);
-  const [tipo, setTipo] = useState(1); 
-  const [insumos, setInsumos] = useState(false);
+  const [tipo, setTipo] = useState(1);
+  const [tipoLabel, setTipoLabel] = useState('Hogar');
+  const [insActive, setInsActive] = useState(false);
+  const [time, setTime] = useState('09:41');
 
-  const calcular = () => Math.round((m2 * 45 * tipo) + (insumos ? 500 : 0));
+  // Reloj simulado estilo iPhone
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const n = new Date();
+      setTime(`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
 
-  return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: '400px', margin: '0 auto', backgroundColor: '#f3f4f6', minHeight: '100vh', paddingBottom: '40px' }}>
-      <div style={{ backgroundColor: '#1e3a8a', color: 'white', padding: '30px', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
-        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900' }}>LIMHER</h1>
-        <p style={{ fontSize: '14px', opacity: 0.9, marginTop: '5px' }}>Limpieza Profesional & Confianza</p>
-      </div>
+  const total = Math.round((m2 * 45 * tipo) + (insActive ? 500 : 0));
 
-      <div style={{ padding: '20px' }}>
-        <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 10px 15px rgba(0,0,0,0.05)' }}>
-          <h3 style={{ marginTop: 0, color: '#1e3a8a', fontSize: '18px' }}>Cotizador Instantáneo</h3>
-          
-          <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#6b7280', display: 'block', marginBottom: '10px' }}>TAMAÑO DEL LUGAR: {m2} m²</label>
-          <input type="range" min="20" max="300" step="10" value={m2} onChange={(e) => setM2(Number(e.target.value))} style={{ width: '100%', marginBottom: '25px', cursor: 'pointer' }} />
+  const handleSetTipo = (t, label) => {
+    setTipo(t);
+    setTipoLabel(label);
+  };
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '25px' }}>
-            <button onClick={() => setTipo(1)} style={{ flex: 1, padding: '12px 5px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: tipo === 1 ? '#2563eb' : '#f3f4f6', color: tipo === 1 ? 'white' : '#4b5563', border: 'none', borderRadius: '8px', transition: '0.3s' }}>HOGAR</button>
-            <button onClick={() => setTipo(1.5)} style={{ flex: 1, padding: '12px 5px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: tipo === 1.5 ? '#2563eb' : '#f3f4f6', color: tipo === 1.5 ? 'white' : '#4b5563', border: 'none', borderRadius: '8px', transition: '0.3s' }}>OFICINA</button>
-            <button onClick={() => setTipo(2.2)} style={{ flex: 1, padding: '12px 5px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', backgroundColor: tipo === 2.2 ? '#2563eb' : '#f3f4f6', color: tipo === 2.2 ? 'white' : '#4b5563', border: 'none', borderRadius: '8px', transition: '0.3s' }}>OBRA</button>
-          </div>
+  const handleWhatsApp = () => {
+    const msg = `¡Hola LIMHER! Quiero reservar:\nTipo: ${tipoLabel}\nTamaño: ${m2}m²\nInsumos: ${insActive ? 'Sí' : 'No'}\nTotal: $${total}`;
+    window.open(`https://wa.me/59899000000?text=${encodeURIComponent(msg)}`); // Reemplaza con tu número
+  };
 
-          <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', marginBottom: '25px', color: '#374151', cursor: 'pointer' }}>
-            <input type="checkbox" checked={insumos} onChange={() => setInsumos(!insumos)} style={{ marginRight: '10px', width: '18px', height: '18px' }} /> Incluir materiales de limpieza
-          </label>
+  // --- COMPONENTES DE PANTALLA ---
 
-          <div style={{ borderTop: '2px solid #f3f4f6', paddingTop: '20px', textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '5px' }}>Total Estimado</div>
-            <div style={{ fontSize: '36px', fontWeight: '900', color: '#1e3a8a' }}>${calcular()}</div>
-          </div>
-
-          <button style={{ width: '100%', marginTop: '25px', padding: '18px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)' }}>
-            RESERVAR AHORA
-          </button>
+  const Layout = ({ children, backView }) => (
+    <div style={{ backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ backgroundColor: 'white', width: '340px', minHeight: '600px', borderRadius: '32px', border: '1px solid #e5e7eb', overflow: 'hidden', display: 'flex', flex-direction: 'column', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+        {/* Status Bar */}
+        <div style={{ padding: '12px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+          <span style={{ fontWeight: '600' }}>{time}</span>
+          <span>●●● ▲</span>
         </div>
-      </div>
-
-      <div style={{ padding: '0 20px' }}>
-        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #dcfce7', padding: '15px', borderRadius: '12px', textAlign: 'center' }}>
-          <p style={{ margin: 0, fontSize: '13px', color: '#15803d', fontWeight: '600' }}>✓ Personal con Unipersonal y aportes al día.</p>
+        <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column' }}>
+          {backView && <button onClick={() => setView(backView)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '13px', textAlign: 'left', marginBottom: '20px', cursor: 'pointer' }}>← volver</button>}
+          {children}
         </div>
       </div>
     </div>
   );
-};
 
-// Esto es lo que hace que Vercel lo lea
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  render(<LimherApp />, rootElement);
-}
+  if (view === 'welcome') return (
+    <Layout>
+      <div style={{ marginTop: '40px' }}>
+        <div style={{ width: '40px', height: '40px', backgroundColor: '#E1F5EE', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>🟢</div>
+        <h1 style={{ fontSize: '28px', margin: '0' }}>lim<span style={{ color: '#1D9E75' }}>her</span></h1>
+        <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginTop: '10px' }}>Limpieza profesional verificada<br/>en Maldonado</p>
+      </div>
+      <div style={{ marginTop: 'auto' }}>
+        <button onClick={() => setView('quoter')} style={{ width: '100%', padding: '14px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '600', marginBottom: '10px', cursor: 'pointer' }}>Solicitar servicio</button>
+        <button onClick={() => setView('register')} style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: '#0F6E56', border: '1px solid #5DCAA5', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}>Soy colaboradora</button>
+      </div>
+    </Layout>
+  );
 
-export default LimherApp;
+  if (view === 'quoter') return (
+    <Layout backView="welcome">
+      <h2 style={{ fontSize: '18px', fontWeight: '600', margin: '0' }}>Cotizá tu servicio</h2>
+      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>El precio se calcula al instante</p>
+      
+      <label style={{ fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase' }}>Tamaño: {m2} m²</label>
+      <input type="range" min="20" max="300" step="10" value={m2} onChange={(e) => setM2(e.target.value)} style={{ width: '100%', accentColor: '#1D9E75', margin: '15px 0 25px' }} />
+      
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        {['Hogar', 'Oficina', 'Obra'].map((l, i) => {
+          const vals = [1, 1.5, 2.2];
+          return (
+            <button key={l} onClick={() => handleSetTipo(vals[i], l)} style={{ flex: 1, padding: '10px', fontSize: '12px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: tipoLabel === l ? '#E1F5EE' : 'white', color: tipoLabel === l ? '#085041' : '#6b7280', fontWeight: tipoLabel === l ? '600' : '400' }}>{l}</button>
+          )
+        })}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderTop: '1px solid #f3f4f6' }}>
+        <div>
+          <div style={{ fontSize: '14px' }}>Insumos incluidos</div>
+          <div style={{ fontSize: '12px', color:
