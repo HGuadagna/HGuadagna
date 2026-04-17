@@ -3,12 +3,21 @@ import ReactDOM from 'react-dom/client'
 
 const App = () => {
   const [view, setView] = useState('welcome');
-  const [m2, setM2] = useState(50);
-  const [tipo, setTipo] = useState(1);
-  const [tipoLabel, setTipoLabel] = useState('Hogar');
-  const [insActive, setInsActive] = useState(false);
   const [time, setTime] = useState('09:41');
+  
+  // Estado de la cotización (v2)
+  const [state, setState] = useState({
+    rooms: 1,
+    clean: 'light', // light o deep
+    freq: 'once',   // once, weekly, monthly
+    days: [],
+    hour: '',
+    street: '',
+    city: 'Maldonado',
+    km: 5
+  });
 
+  // Reloj iPhone
   useEffect(() => {
     const tick = () => {
       const n = new Date();
@@ -19,22 +28,48 @@ const App = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const total = Math.round((m2 * 45 * tipo) + (insActive ? 500 : 0));
+  // Lógica de cálculo v2
+  const calcPrice = () => {
+    let base = state.rooms * 800;
+    if (state.clean === 'deep') base *= 1.5;
+    
+    let multiplier = 1;
+    if (state.freq === 'weekly') multiplier = 0.9; // 10% desc
+    if (state.freq === 'monthly') multiplier = 0.8; // 20% desc
+    
+    return Math.round(base * multiplier);
+  };
+
+  const toggleDay = (day) => {
+    const newDays = state.days.includes(day) 
+      ? state.days.filter(d => d !== day) 
+      : [...state.days, day];
+    setState({...state, days: newDays});
+  };
 
   const handleWhatsApp = () => {
-    const msg = `¡Hola LIMHER! Quiero reservar:\nTipo: ${tipoLabel}\nTamaño: ${m2}m²\nInsumos: ${insActive ? 'Sí' : 'No'}\nTotal: $${total}`;
+    const freqMap = {once: 'Una vez', weekly: 'Semanal', monthly: 'Mensual'};
+    const msg = `¡Hola LIMHER! Solicitud de servicio:\n\n` +
+      `- ${state.rooms} ${state.rooms === 1 ? 'habitación' : 'habitaciones'}\n` +
+      `- Limpieza: ${state.clean === 'deep' ? 'Profunda' : 'Ligera'}\n` +
+      `- Frecuencia: ${freqMap[state.freq]}\n` +
+      `- Días: ${state.days.join(', ') || 'A convenir'}\n` +
+      `- Dirección: ${state.street}, ${state.city}\n` +
+      `- Total: $${calcPrice()}`;
     window.open(`https://wa.me/59899000000?text=${encodeURIComponent(msg)}`);
   };
 
-  const Layout = ({ children, backView }) => (
+  // Marco del Celular
+  const Layout = ({ children, backView, title }) => (
     <div style={{ backgroundColor: '#f3f4f6', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ backgroundColor: 'white', width: '340px', height: '600px', borderRadius: '32px', border: '1px solid #e5e7eb', overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+      <div style={{ backgroundColor: 'white', width: '340px', height: '620px', borderRadius: '32px', border: '1px solid #e5e7eb', overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
         <div style={{ padding: '12px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
           <span style={{ fontWeight: '600' }}>{time}</span>
           <span style={{ letterSpacing: '2px' }}>●●● ▲</span>
         </div>
-        <div style={{ flex: 1, padding: '24px 20px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-          {backView && <button onClick={() => setView(backView)} style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '13px', textAlign: 'left', marginBottom: '15px', cursor: 'pointer', padding: 0 }}>← volver</button>}
+        <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          {backView && <button onClick={() => setView(backView)} style={{ background: 'none', border: 'none', color: '#1D9E75', fontSize: '13px', textAlign: 'left', marginBottom: '15px', cursor: 'pointer', fontWeight: '500' }}>← volver</button>}
+          {title && <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '4px' }}>{title}</h2>}
           {children}
         </div>
       </div>
@@ -43,82 +78,26 @@ const App = () => {
 
   if (view === 'welcome') return (
     <Layout>
-      <div style={{ marginTop: '20px' }}>
-        <div style={{ width: '36px', height: '36px', backgroundColor: '#E1F5EE', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 14 C3 8 9 4 15 4" stroke="#1D9E75" strokeWidth="2" strokeLinecap="round"/><circle cx="15" cy="4" r="2" fill="#1D9E75"/></svg>
+      <div style={{ marginTop: '40px', textAlign: 'left' }}>
+        <div style={{ width: '40px', height: '40px', backgroundColor: '#E1F5EE', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+          <div style={{ width: '20px', height: '20px', backgroundColor: '#1D9E75', borderRadius: '50%' }}></div>
         </div>
-        <h1 style={{ fontSize: '26px', margin: '0', fontWeight: '500' }}>lim<span style={{ color: '#1D9E75' }}>her</span></h1>
-        <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.5', marginTop: '4px' }}>Limpieza profesional verificada<br/>en Maldonado</p>
+        <h1 style={{ fontSize: '32px', margin: '0', fontWeight: '600', letterSpacing: '-1px' }}>lim<span style={{ color: '#1D9E75' }}>her</span></h1>
+        <p style={{ fontSize: '15px', color: '#6b7280', lineHeight: '1.5', marginTop: '8px' }}>Tu hogar impecable en<br/>Maldonado y Punta del Este.</p>
       </div>
-      <div style={{ marginTop: 'auto' }}>
-        <button onClick={() => setView('quoter')} style={{ width: '100%', padding: '14px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '500', marginBottom: '10px', cursor: 'pointer' }}>Solicitar servicio</button>
-        <button onClick={() => setView('register')} style={{ width: '100%', padding: '14px', backgroundColor: 'transparent', color: '#0F6E56', border: '1px solid #5DCAA5', borderRadius: '12px', fontWeight: '500', cursor: 'pointer' }}>Soy colaboradora</button>
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button onClick={() => setView('step1')} style={{ width: '100%', padding: '16px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '14px', fontWeight: '600', cursor: 'pointer' }}>Comenzar cotización</button>
+        <button onClick={() => setView('register')} style={{ width: '100%', padding: '16px', backgroundColor: 'transparent', color: '#0F6E56', border: '1px solid #E1F5EE', borderRadius: '14px', fontWeight: '600', cursor: 'pointer' }}>Postularse como colaboradora</button>
       </div>
     </Layout>
   );
 
-  if (view === 'quoter') return (
-    <Layout backView="welcome">
-      <h2 style={{ fontSize: '17px', fontWeight: '500', margin: '0' }}>Cotizá tu servicio</h2>
-      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '24px' }}>Precio instantáneo Hogar y Oficina</p>
+  if (view === 'step1') return (
+    <Layout backView="welcome" title="Personalizá tu limpieza">
+      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>Paso 1 de 3: Alcance</p>
       
-      <label style={{ fontSize: '11px', fontWeight: '500', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '6px' }}>Tamaño: {m2} m²</label>
-      <input type="range" min="20" max="250" step="10" value={m2} onChange={(e) => setM2(e.target.value)} style={{ width: '100%', accentColor: '#1D9E75', marginBottom: '25px' }} />
+      <label style={{ fontSize: '11px', fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase' }}>Habitaciones: {state.rooms}</label>
+      <input type="range" min="1" max="5" value={state.rooms} onChange={(e) => setState({...state, rooms: parseInt(e.target.value)})} style={{ width: '100%', accentColor: '#1D9E75', margin: '15px 0 25px' }} />
       
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '25px' }}>
-        {['Hogar', 'Oficina'].map((l, i) => {
-          const vals = [1, 1.5];
-          const active = tipoLabel === l;
-          return (
-            <button key={l} onClick={() => { setTipo(vals[i]); setTipoLabel(l); }} style={{ flex: 1, padding: '14px 6px', fontSize: '14px', borderRadius: '12px', border: '1px solid #e5e7eb', backgroundColor: active ? '#E1F5EE' : '#f9fafb', color: active ? '#085041' : '#6b7280', fontWeight: active ? '600' : '400', cursor: 'pointer', transition: '0.2s' }}>{l}</button>
-          )
-        })}
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: '0.5px solid #e5e7eb' }}>
-        <div>
-          <div style={{ fontSize: '14px' }}>Insumos incluidos</div>
-          <div style={{ fontSize: '12px', color: '#9ca3af' }}>Productos + $500</div>
-        </div>
-        <div onClick={() => setInsActive(!insActive)} style={{ width: '38px', height: '22px', backgroundColor: insActive ? '#1D9E75' : '#d1d5db', borderRadius: '11px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
-          <div style={{ position: 'absolute', width: '16px', height: '16px', backgroundColor: 'white', borderRadius: '50%', top: '3px', left: insActive ? '19px' : '3px', transition: '0.2s' }} />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '16px', borderTop: '0.5px solid #e5e7eb' }}>
-        <div style={{ fontSize: '12px', color: '#6b7280' }}>Total estimado</div>
-        <div style={{ fontSize: '32px', fontWeight: '500' }}>${total.toLocaleString('es-UY')}</div>
-        <button onClick={() => setView('confirm')} style={{ width: '100%', marginTop: '15px', padding: '14px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '500', cursor: 'pointer' }}>Reservar ahora</button>
-      </div>
-    </Layout>
-  );
-
-  if (view === 'confirm') return (
-    <Layout backView="quoter">
-      <h2 style={{ fontSize: '17px', fontWeight: '500' }}>Confirmá tu reserva</h2>
-      <div style={{ backgroundColor: '#f9fafb', padding: '14px', borderRadius: '12px', margin: '15px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{color:'#6b7280'}}>Tipo</span><b>{tipoLabel}</b></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}><span style={{color:'#6b7280'}}>Tamaño</span><b>{m2} m²</b></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingTop: '8px', borderTop: '0.5px solid #e5e7eb' }}><b>Total</b><b style={{ color: '#0F6E56' }}>${total.toLocaleString('es-UY')}</b></div>
-      </div>
-      <div style={{fontSize:'11px', color:'#9ca3af', textTransform:'uppercase', marginBottom:'6px'}}>Dirección</div>
-      <input placeholder="Calle, número, ciudad" style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '10px', backgroundColor:'#f9fafb' }} />
-      <button onClick={handleWhatsApp} style={{ width: '100%', marginTop: 'auto', padding: '14px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '500' }}>Confirmar y pagar</button>
-    </Layout>
-  );
-
-  if (view === 'register') return (
-    <Layout backView="welcome">
-      <h2 style={{ fontSize: '17px', fontWeight: '500' }}>Registro de colaboradora</h2>
-      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px' }}>Completá tus datos para activar tu perfil</p>
-      <input placeholder="Nombre completo" style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '10px', backgroundColor:'#f9fafb' }} />
-      <input placeholder="RUT unipersonal" style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #e5e7eb', marginBottom: '10px', backgroundColor:'#f9fafb' }} />
-      <div style={{ padding: '20px', border: '1px dashed #5DCAA5', borderRadius: '8px', textAlign: 'center', fontSize: '13px', color: '#6b7280', cursor: 'pointer', backgroundColor:'#f9fafb' }}>+ Adjuntar documentación</div>
-      <button onClick={() => setView('welcome')} style={{ width: '100%', marginTop: 'auto', padding: '14px', backgroundColor: '#1D9E75', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '500' }}>Enviar solicitud</button>
-    </Layout>
-  );
-
-  return null;
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '25px' }}>
+        <button onClick={() => setState({...state, clean: 'light'})} style={{ flex: 1, padding: '12px', borderRadius: '10px',
