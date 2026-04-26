@@ -1,6 +1,6 @@
-- 👋 Hi, I’m @HGuadagna
+- 👋 Hi, I’m Hernán 
 
-- 🌱 I’m currently learning how to code :D
+-  I don't know how to code 😅
 
 <!---
 HGuadagna/HGuadagna is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
